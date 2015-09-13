@@ -1,0 +1,88 @@
+doctype html
+html
+	head
+		title webscan
+		:css
+			#main { margin: 10px; padding: 0; font-family: "Lato", "Open Sans", Arial, Helvetica; }
+			p { padding: 4px; margin: 0; }
+			.divBlock { display: block; margin-left: auto; margin-right: auto; margin-top: 10px; margin-bottom: 10px; padding: 10px; }
+			#divScan { min-height: 15em; background: #fdc; }
+			#divRecent { background: #dcf; }
+			#resultDownload { text-decoration: none; color: #421; }
+			#buttonDelete { color: #f00; }
+		script(src="http://code.jquery.com/jquery.min.js")
+	body
+		#main
+			#divScan.divBlock
+				form#formScanParams(method="post", action="scan")
+					p Page size:
+						select#selectPageSize
+							- foreach (ps; pageSizes)
+								- auto ss = ps.toShortString();
+								option(id="#{`selectPageSize` ~ ss}", value="#{ss}", data-width="#{ps.width}", data-height="#{ps.height}") #{ps.toString()}
+						| Width (mm):
+						input#inputWidth(type="number", max="228", min="0")
+						| Height (mm):
+						input#inputHeight(type="number", max="381", min="0")
+					p Resolution:
+						select#selectResolution
+							- foreach (res; resolutions)
+								option(value="#{res.dpi}") #{text(res.dpi, "dpi (", res.description, ")")}
+					p
+						input(type="submit", value="Scan")
+				p#scanResult
+			#divRecent.divBlock
+				p Recently scanned:
+				table
+					- import std.file, std.algorithm : map;
+					- foreach (f; dirEntries("result", SpanMode.shallow).map!(x => x.name[7 .. $]))
+						tr(data-name="#{f}")
+							td
+								a(href="#{`result/` ~ f}") #{f}
+							td
+								a#buttonDelete(href="#", onclick="#{`deleteFile('` ~ f ~ `')`}") X
+			:javascript
+				function deleteFile(name)
+				{
+					console.log(name);
+					$("tr[data-name='" + name + "']").fadeOut(200, function() {
+						$(this).remove();
+					});
+				}
+
+				function setWH(sel)
+				{
+					var ps = sel.val();
+					var disable = !!ps && ps != "other";
+					$("#inputWidth, #inputHeight").attr("disabled", disable);
+					if (disable) {
+						var opt = $("#selectPageSize" + sel.val());
+						$("#inputWidth").val(opt.attr("data-width"));
+						$("#inputHeight").val(opt.attr("data-height"));
+					}
+				}
+
+				sel = $("#selectPageSize");
+				setWH(sel);
+				sel.change(function() {
+					setWH($(this));
+				});
+
+				$("#formScanParams").submit(function(event) {
+					event.preventDefault();
+					var $form = $(this),
+						w = $form.find("#inputWidth").val(),
+						h = $form.find("#inputHeight").val(),
+						res = $form.find("#selectResolution").val(),
+						url = $form.attr("action"),
+						sr = $("#scanResult");
+					sr.html("Scanning...").slideDown(100, function() {
+						$("#formScanParams").slideUp(500);
+					});
+					$.post(url, { pageWidth : w, pageHeight : h, resolution : res }).done(function(data) {
+						console.log(data);
+						sr.slideUp(100, function() {
+							sr.html('<a id="resultDownload" href="result/' + data + '">Download ' + data + '</a>').slideDown();
+						});
+					});
+				});

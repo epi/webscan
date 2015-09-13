@@ -1,0 +1,7 @@
+name "webscan"
+description "Web UI for SANE"
+authors "Adrian Matoga"
+dependency "vibe-d" version="~>0.7.23"
+versions "VibeDefaultMain"
+homepage "http://github.com/epi/webscan"
+license "public domain"
