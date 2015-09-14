@@ -16,7 +16,14 @@ are accessible to your compiler):
 
 Once built, copy the binary to the machine you want to use as the scan server, create a directory
 named "result" in the same directory as the binary, and just run webscan there. Make sure sane is installed
-and webscan is executed with sufficient privileges to access the scanner.
+and webscan is executed with sufficient privileges to access the scanner,
+but without the power to do much damage to the system.
+Just save the following settings in the configuration file /etc/vibe/vibe.conf:
+
+    {
+        "user": "saned",
+        "group": "scanner",
+    }
 
 ## license
 It's public domain. See the file UNLICENSE. No charges, no restrictions, no warranty of any kind.
